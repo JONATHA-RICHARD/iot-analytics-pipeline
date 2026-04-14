@@ -3,47 +3,35 @@ from sqlalchemy import create_engine, text
 
 print("🚀 Iniciando ETL...")
 
-# conexão com banco
+# conexão com banco (CORRETO)
 engine = create_engine('postgresql://postgres:False157@localhost:5432/iot_db')
 
-# ler CSV corretamente
+# ler CSV
 try:
-    df = pd.read_csv(
-        'data/temperature_readings.csv',
-        encoding='latin1'
-    )
+    df = pd.read_csv('data/temperature_readings.csv', encoding='latin1')
     print("✅ CSV carregado!")
 except Exception as e:
     print("❌ Erro ao ler CSV:", e)
     exit()
 
-# padronizar nomes das colunas
+# padronizar colunas
 df.columns = [col.lower().strip() for col in df.columns]
 
-# remover espaços extras nos dados
+# limpar dados
 for col in df.columns:
     if df[col].dtype == 'object':
         df[col] = df[col].astype(str).str.strip()
 
-# converter tipos corretamente
-try:
-    df['temperature'] = pd.to_numeric(df['temperature'], errors='coerce')
-    df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-except Exception as e:
-    print("❌ Erro ao converter dados:", e)
-    exit()
+# converter tipos
+df['temperature'] = pd.to_numeric(df['temperature'], errors='coerce')
+df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
 
-# remover linhas inválidas
+# remover inválidos
 df = df.dropna()
 
-# enviar dados para o banco
+# inserir no banco
 try:
-    df.to_sql(
-        'temperature_readings',
-        engine,
-        if_exists='replace',
-        index=False
-    )
+    df.to_sql('temperature_readings', engine, if_exists='replace', index=False)
     print("✅ Dados inseridos com sucesso!")
 except Exception as e:
     print("❌ Erro ao inserir no banco:", e)
